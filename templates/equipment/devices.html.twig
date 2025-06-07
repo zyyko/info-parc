@@ -1,0 +1,142 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="col-lg-12 grid-margin stretch-card">
+  <div class="card">
+    <div class="card-body">
+      <h4 class="card-title">Liste des dispositifs</h4>
+      <p class="card-description">Barre de santé calculée à partir des dates de fabrication et de renouvellement</p>
+
+      <!-- FILTRES -->
+      <div class="card mb-4 p-3 bg-light border">
+        <div class="row">
+          <div class="col-md-4">
+            <label for="statusFilter" class="form-label">Filtrer par statut</label>
+            <select id="statusFilter" class="form-control">
+              <option value="">Tous les statuts</option>
+              <option value="active">Actif</option>
+              <option value="inactive">Inactif</option>
+              <option value="repairing">En réparation</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label for="healthFilter" class="form-label">Filtrer par santé</label>
+            <select id="healthFilter" class="form-control">
+              <option value="">Toutes les couleurs</option>
+              <option value="green">🟢 Vert</option>
+              <option value="yellow">🟡 Jaune</option>
+              <option value="red">🔴 Rouge</option>
+            </select>
+          </div>
+          <div class="col-md-4 d-flex align-items-end">
+            <div class="text-muted small">
+              <strong>Légende santé:</strong> <br>
+              🟢 > 60% (Bonne)<br>
+              🟡 30-60% (Moyenne)<br>
+              🔴 < 30% (Critique)
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLEAU -->
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Image</th>
+            <th>Type</th>
+            <th>Numéro de série</th>
+            <th>Statut</th>
+            <th>Date de fabrication</th>
+            <th>Date de renouvellement</th>
+            <th>Santé</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for device in devices %}
+            {% set now = "now"|date("U") %}
+            {% set fabrication = device.fabricationDate|date("U") %}
+            {% set renewal = device.renewalDate|date("U") %}
+            {% set total = renewal - fabrication %}
+            {% set elapsed = now - fabrication %}
+            {% set raw_percent = (1 - (elapsed / total)) * 100 %}
+            {% set percent = max(raw_percent|round(0, 'floor'), 0) %}
+
+            {% if percent >= 60 %}
+              {% set color = 'bg-success' %}
+              {% set healthClass = 'green' %}
+            {% elseif percent >= 30 %}
+              {% set color = 'bg-warning' %}
+              {% set healthClass = 'yellow' %}
+            {% else %}
+              {% set color = 'bg-danger' %}
+              {% set healthClass = 'red' %}
+            {% endif %}
+
+            <tr data-status="{{ device.status }}" data-health="{{ healthClass }}" data-id="{{ device.id }}" style="cursor:pointer;">
+              <td class="py-1">
+                {% if device.deviceImage %}
+                  <img src="{{ asset('assets/images/devices_photos/' ~ device.deviceImage) }}" alt="Image" width="50" style="border-radius: 8px;" />
+                {% else %}
+                  <span class="text-muted">Pas d’image</span>
+                {% endif %}
+              </td>
+              <td>{{ device.type }}</td>
+              <td>{{ device.serialNumber }}</td>
+              <td>
+                {% if device.status == 'active' %}
+                  <span class="badge badge-success">Actif</span>
+                {% elseif device.status == 'repairing' %}
+                  <span class="badge badge-warning">En réparation</span>
+                {% else %}
+                  <span class="badge badge-secondary">Inactif</span>
+                {% endif %}
+              </td>
+              <td>{{ device.fabricationDate|date('Y-m-d') }}</td>
+              <td>{{ device.renewalDate|date('Y-m-d') }}</td>
+              <td>
+                <div class="progress">
+                  <div class="progress-bar {{ color }}" role="progressbar" style="width: {{ percent }}%" aria-valuenow="{{ percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- JAVASCRIPT DES FILTRES -->
+<script>
+  const statusFilter = document.getElementById('statusFilter');
+  const healthFilter = document.getElementById('healthFilter');
+
+  function applyFilters() {
+    const status = statusFilter.value;
+    const health = healthFilter.value;
+
+    document.querySelectorAll('tbody tr').forEach(row => {
+      const rowStatus = row.dataset.status;
+      const rowHealth = row.dataset.health;
+
+      const statusMatch = !status || rowStatus === status;
+      const healthMatch = !health || rowHealth === health;
+
+      row.style.display = (statusMatch && healthMatch) ? '' : 'none';
+    });
+  }
+
+  statusFilter.addEventListener('change', applyFilters);
+  healthFilter.addEventListener('change', applyFilters);
+
+  document.querySelectorAll('tbody tr').forEach(row => {
+  row.addEventListener('click', () => {
+    const id = row.dataset.id;
+    //console.log(row);
+    //console.log("Clicked device ID:", id); 
+    window.location.href = '/equipements/appareil/' + id; 
+  });
+});
+</script>
+{% endblock %}
