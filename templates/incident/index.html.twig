@@ -1,0 +1,125 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="col-lg-12 grid-margin stretch-card">
+  <div class="card">
+    <div class="card-body">
+      <h4 class="card-title">Liste des incidents</h4>
+      <p class="card-description">Filtrer les incidents par statut, description ou utilisateur</p>
+
+      <!-- FILTRES -->
+      <div class="card mb-4 p-3 bg-light border">
+        <div class="row">
+          <div class="col-md-4">
+            <label for="statusFilter" class="form-label">Filtrer par statut</label>
+            <select id="statusFilter" class="form-control">
+              <option value="">Tous les statuts</option>
+              <option value="open">Ouvert</option>
+              <option value="in_progress">En cours</option>
+              <option value="closed">Fermé</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label for="trackingFilter" class="form-label">Rechercher par numéro de suivi</label>
+            <input type="text" id="trackingFilter" class="form-control" placeholder="ex: TRK-2024-XYZ" />
+          </div>
+          <div class="col-md-4 d-flex align-items-end">
+            <button class="btn btn-primary w-100" onclick="applyFilters()">Appliquer</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLEAU -->
+      <div class="table-responsive">
+        <table class="table table-striped align-middle">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Appareil</th>
+              <th>Utilisateur</th>
+              <th>Description</th>
+              <th>Date</th>
+              <th>Statut</th>
+              <th>Tracking ID</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for incident in incidents %}
+              <tr 
+                data-status="{{ incident.status }}" 
+                data-tracking="{{ incident.trackingId|lower }}" 
+                data-id="{{ incident.id }}"
+                style="cursor:pointer;"
+              >
+                <td>{{ incident.id }}</td>
+
+                <td>{{ incident.device.type }}</td>
+
+                <td>
+                  {% if incident.reportedBy %}
+                    <div class="d-flex align-items-center">
+                      <img src="{{ asset('/assets/images/faces/' ~ incident.reportedBy.userImage) }}"
+                           alt="User Image"
+                           class="rounded-circle me-2"
+                           style="width: 40px; height: 40px; object-fit: cover;">
+                      <span>{{ incident.reportedBy.firstName }}</span>
+                    </div>
+                  {% else %}
+                    <span>N/A</span>
+                  {% endif %}
+                </td>
+
+                <td>{{ incident.description|length > 50 ? incident.description[:50] ~ '...' : incident.description }}</td>
+
+                <td>{{ incident.reportDate|date('Y-m-d') }}</td>
+
+                <td>
+                  {% if incident.status == 'open' %}
+                    <span class="badge badge-warning">Ouvert</span>
+                  {% elseif incident.status == 'in_progress' %}
+                    <span class="badge badge-info">En cours</span>
+                  {% elseif incident.status == 'closed' %}
+                    <span class="badge badge-success">Fermé</span>
+                  {% else %}
+                    <span class="badge badge-secondary">{{ incident.status }}</span>
+                  {% endif %}
+                </td>
+
+                <td>{{ incident.trackingId ?? 'N/A' }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- filtre -->
+<script>
+  function applyFilters() {
+    const status = document.getElementById('statusFilter').value.toLowerCase();
+    const tracking = document.getElementById('trackingFilter').value.trim().toLowerCase();
+
+    document.querySelectorAll('tbody tr').forEach(row => {
+      const rowStatus = row.dataset.status.toLowerCase();
+      const rowTracking = row.dataset.tracking.toLowerCase();
+
+      const statusMatch = !status || rowStatus === status;
+      const trackingMatch = !tracking || rowTracking.includes(tracking);
+
+      row.style.display = (statusMatch && trackingMatch) ? '' : 'none';
+    });
+  }
+
+  document.getElementById('statusFilter').addEventListener('change', applyFilters);
+  document.getElementById('trackingFilter').addEventListener('input', applyFilters);
+
+  document.querySelectorAll('tbody tr').forEach(row => {
+    row.addEventListener('click', () => {
+      const id = row.dataset.id;
+      window.location.href = '/incident/' + id;
+    });
+  });
+</script>
+{% endblock %}

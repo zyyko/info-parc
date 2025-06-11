@@ -71,6 +71,113 @@
     .custom-options.open {
       display: block;
     }
+
+    .assigned-user {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .assigned-user img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      margin-right: 15px;
+      object-fit: cover;
+    }
+
+    .assigned-user-info h6 {
+      margin: 0;
+      color: #495057;
+    }
+
+    .assigned-user-info p {
+      margin: 0;
+      color: #6c757d;
+      font-size: 0.9rem;
+    }
+
+    /* Software selection styles */
+    .software-select-wrapper {
+      position: relative;
+      width: 100%;
+      margin-bottom: 70px;
+    }
+
+    .software-select-trigger {
+      width: 100%;
+      height: 50px;
+      padding: 8px 8px 8px 60px;
+      font-size: 1rem;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      background: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+
+    .software-select-trigger .software-icon {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      position: absolute;
+      left: 10px;
+      background: #007bff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+
+    .software-options {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ced4da;
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+      max-height: 160px;
+      overflow-y: auto;
+      z-index: 1050;
+      display: none;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .software-option {
+      padding: 10px 10px 10px 60px;
+      cursor: pointer;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .software-option:hover {
+      background-color: #f8f9fa;
+    }
+
+    .software-option .software-icon {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      position: absolute;
+      left: 10px;
+      background: #007bff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+
+    .software-options.open {
+      display: block;
+    }
   </style>
 {% endblock %}
 
@@ -91,7 +198,14 @@
             {% endif %}
             <h4 class="mt-3">{{ device.deviceName }}</h4>
             <h5 class="text-muted">Numéro de série: <span class="text-primary">{{ device.serialNumber }}</span></h5>
+            <div class="mt-3">
+              <a href="{{ path('device_download_report', {'id': device.id}) }}" class="btn btn-outline-primary">
+                <i class="fa fa-download me-2"></i>Télécharger le rapport PDF
+              </a>
+            </div>
           </div>
+
+          
 
           <!-- Health Progress Bar -->
           {% set now = "now"|date("U") %}
@@ -119,28 +233,173 @@
             </div>
           </div>
 
-          <!-- Assign to User -->
+          <!-- Software Section -->
           <div class="mt-5">
-            <h5 class="mb-3">Assigner à un utilisateur</h5>
-            <form method="post">
-              <div class="mb-3">
-                <div class="custom-select-wrapper">
-                  <div class="custom-select-trigger" id="selectTrigger">
-                    <span>-- Choisir un utilisateur --</span>
-                  </div>
-                  <div class="custom-options">
-                    {% for user in users %}
-                      <div class="custom-option" data-value="{{ user.id }}">
-                        <img src="{{ asset('assets/images/faces/' ~ user.userImage) }}" alt="{{ user.firstName }}">
-                        <span>{{ user.firstName }}</span>
+            <h5 class="mb-3">Logiciels installés</h5>
+            {% if deviceSoftware|length > 0 %}
+              <div class="row">
+                {% for deviceSoft in deviceSoftware %}
+                  <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card h-100 border-0 shadow-sm">
+                      <div class="card-body">
+                        <div class="d-flex align-items-center mb-2">
+                          <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                            <i class="fas fa-laptop-code text-primary"></i>
+                          </div>
+                          <div>
+                            <h6 class="mb-0">{{ deviceSoft.software.name }}</h6>
+                            {% if deviceSoft.software.version %}
+                              <small class="text-muted">Version {{ deviceSoft.software.version }}</small>
+                            {% endif %}
+                          </div>
+                        </div>
+                        <div class="small text-muted">
+                          <div class="mb-1">
+                            <i class="fa fa-calendar-alt me-1"></i>
+                            Installé le {{ deviceSoft.installationDate|date('d/m/Y') }}
+                          </div>
+                          {% if deviceSoft.software.licenseExpiry %}
+                            {% set now = "now"|date("U") %}
+                            {% set expiry = deviceSoft.software.licenseExpiry|date("U") %}
+                            {% set daysLeft = ((expiry - now) / 86400)|round %}
+                            <div class="mb-1">
+                              <i class="fa fa-key me-1"></i>
+                              Licence expire le {{ deviceSoft.software.licenseExpiry|date('d/m/Y') }}
+                              {% if daysLeft <= 0 %}
+                                <span class="badge bg-danger ms-1">Expirée</span>
+                              {% elseif daysLeft <= 30 %}
+                                <span class="badge bg-warning ms-1">{{ daysLeft }} jours</span>
+                              {% else %}
+                                <span class="badge bg-success ms-1">{{ daysLeft }} jours</span>
+                              {% endif %}
+                            </div>
+                          {% endif %}
+                        </div>
                       </div>
-                    {% endfor %}
+                    </div>
                   </div>
-                  <input type="hidden" name="userId" id="selectedUser" required>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Aucun logiciel installé sur cet appareil.
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Add Software Section -->
+          {% if availableSoftware|length > 0 %}
+          <div class="mt-5">
+            <h5 class="mb-3">Ajouter un logiciel</h5>
+            
+            {% if device.status|lower == 'repairing' or device.status|lower == 'inactive' %}
+              <!-- Device is not active - show warning message -->
+              <div class="alert alert-warning">
+                <i class="fa fa-exclamation-triangle me-2"></i>
+                Impossible d'installer des logiciels. L'appareil doit être actif pour installer des logiciels.
+                <br><small class="text-muted">Statut actuel: <strong>{{ device.status }}</strong></small>
+              </div>
+              
+              <div class="software-select-wrapper">
+                <div class="software-select-trigger disabled" style="background-color: #f8f9fa; cursor: not-allowed; opacity: 0.6;">
+                  <div class="software-icon" style="background-color: #6c757d;">
+                    <i class="fa fa-ban"></i>
+                  </div>
+                  <span class="text-muted">Installation désactivée - Appareil {{ device.status|lower }}</span>
                 </div>
               </div>
-              <button type="submit" class="btn btn-primary btn-lg w-100">Assigner</button>
-            </form>
+              
+              <button type="button" class="btn btn-secondary btn-lg w-100" disabled>
+                <i class="fa fa-ban me-2"></i>Installation désactivée
+              </button>
+              
+            {% else %}
+              <!-- Device is active - show normal form -->
+              <form method="post" action="{{ path('device_install_software', {'id': device.id}) }}">
+                <div class="mb-3">
+                  <div class="software-select-wrapper">
+                    <div class="software-select-trigger" id="softwareSelectTrigger">
+                      <div class="software-icon">
+                        <i class="fa fa-plus"></i>
+                      </div>
+                      <span>-- Choisir un logiciel à installer --</span>
+                    </div>
+                    <div class="software-options">
+                      {% for software in availableSoftware %}
+                        <div class="software-option" data-value="{{ software.id }}">
+                          <div class="software-icon">
+                            <i class="fa fa-laptop-code"></i>
+                          </div>
+                          <div>
+                            <span>{{ software.name }}</span>
+                            {% if software.version %}
+                              <small class="text-muted d-block">Version {{ software.version }}</small>
+                            {% endif %}
+                          </div>
+                        </div>
+                      {% endfor %}
+                    </div>
+                    <input type="hidden" name="softwareId" id="selectedSoftware" required>
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-success btn-lg w-100">
+                  <i class="fa fa-download me-2"></i>Installer le logiciel
+                </button>
+              </form>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          <!-- Assignment Section -->
+          <div class="mt-5">
+            <h5 class="mb-3">Attribution de l'appareil</h5>
+            
+            {% if assignedUser %}
+              <!-- Device is already assigned -->
+              <div class="alert alert-info">
+                <i class="fa fa-info-circle me-2"></i>
+                Cet appareil est déjà assigné à un utilisateur.
+              </div>
+              
+              <div class="assigned-user">
+                <img src="{{ asset('assets/images/faces/' ~ assignedUser.userImage) }}" alt="{{ assignedUser.firstName }}">
+                <div class="assigned-user-info flex-grow-1">
+                  <h6>{{ assignedUser.firstName }} {{ assignedUser.lastName ?? '' }}</h6>
+                  <p>Utilisateur assigné</p>
+                </div>
+              </div>
+              
+              <form method="post" action="{{ path('device_unassign', {'id': device.id}) }}">
+                <button type="submit" class="btn btn-outline-danger btn-lg w-100" onclick="return confirm('Êtes-vous sûr de vouloir désassigner cet appareil ?')">
+                  <i class="fa fa-unlink me-2"></i>Désassigner l'appareil
+                </button>
+              </form>
+              
+            {% else %}
+              <!-- Device is not assigned - show assignment form -->
+              <form method="post" action="{{ path('device_assign', {'id': device.id}) }}">
+                <div class="mb-3">
+                  <div class="custom-select-wrapper">
+                    <div class="custom-select-trigger" id="selectTrigger">
+                      <span>-- Choisir un utilisateur --</span>
+                    </div>
+                    <div class="custom-options">
+                      {% for user in users %}
+                        <div class="custom-option" data-value="{{ user.id }}">
+                          <img src="{{ asset('assets/images/faces/' ~ user.userImage) }}" alt="{{ user.firstName }}">
+                          <span>{{ user.firstName }} {{ user.lastName ?? '' }}</span>
+                        </div>
+                      {% endfor %}
+                    </div>
+                    <input type="hidden" name="userId" id="selectedUser" required>
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg w-100">
+                  <i class="fa fa-user-check me-2"></i>Assigner l'appareil
+                </button>
+              </form>
+            {% endif %}
           </div>
 
         </div>
@@ -151,44 +410,94 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  // User selection functionality
   const selectWrapper = document.querySelector('.custom-select-wrapper');
   const selectTrigger = document.querySelector('.custom-select-trigger');
   const options = document.querySelector('.custom-options');
   const hiddenInput = document.querySelector('#selectedUser');
 
-  // Toggle options visibility
-  selectTrigger.addEventListener('click', function() {
-    options.classList.toggle('open');
-  });
-
-  // Handle option selection
-  document.querySelectorAll('.custom-option').forEach(option => {
-    option.addEventListener('click', function() {
-      const value = this.getAttribute('data-value');
-      const text = this.querySelector('span').textContent;
-      const img = this.querySelector('img').cloneNode(true);
-      
-      // Update hidden input
-      hiddenInput.value = value;
-      
-      // Update trigger display
-      selectTrigger.innerHTML = '';
-      selectTrigger.appendChild(img);
-      const span = document.createElement('span');
-      span.textContent = text;
-      selectTrigger.appendChild(span);
-      
-      // Close options
-      options.classList.remove('open');
+  // Only add event listeners if elements exist (when device is not assigned)
+  if (selectWrapper && selectTrigger && options && hiddenInput) {
+    // Toggle options visibility
+    selectTrigger.addEventListener('click', function() {
+      options.classList.toggle('open');
     });
-  });
 
-  // Close options when clicking outside
-  document.addEventListener('click', function(e) {
-    if (!selectWrapper.contains(e.target)) {
-      options.classList.remove('open');
-    }
-  });
+    // Handle option selection
+    document.querySelectorAll('.custom-option').forEach(option => {
+      option.addEventListener('click', function() {
+        const value = this.getAttribute('data-value');
+        const text = this.querySelector('span').textContent;
+        const img = this.querySelector('img').cloneNode(true);
+        
+        // Update hidden input
+        hiddenInput.value = value;
+        
+        // Update trigger display
+        selectTrigger.innerHTML = '';
+        selectTrigger.appendChild(img);
+        const span = document.createElement('span');
+        span.textContent = text;
+        selectTrigger.appendChild(span);
+        
+        // Close options
+        options.classList.remove('open');
+      });
+    });
+
+    // Close options when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!selectWrapper.contains(e.target)) {
+        options.classList.remove('open');
+      }
+    });
+  }
+
+  // Software selection functionality
+  const softwareSelectWrapper = document.querySelector('.software-select-wrapper');
+  const softwareSelectTrigger = document.querySelector('.software-select-trigger');
+  const softwareOptions = document.querySelector('.software-options');
+  const softwareHiddenInput = document.querySelector('#selectedSoftware');
+
+  if (softwareSelectWrapper && softwareSelectTrigger && softwareOptions && softwareHiddenInput) {
+    // Toggle software options visibility
+    softwareSelectTrigger.addEventListener('click', function() {
+      softwareOptions.classList.toggle('open');
+    });
+
+    // Handle software option selection
+    document.querySelectorAll('.software-option').forEach(option => {
+      option.addEventListener('click', function() {
+        const value = this.getAttribute('data-value');
+        const text = this.querySelector('span').textContent;
+        const version = this.querySelector('small') ? this.querySelector('small').textContent : '';
+        
+        // Update hidden input
+        softwareHiddenInput.value = value;
+        
+        // Update trigger display
+        softwareSelectTrigger.innerHTML = '';
+        const icon = document.createElement('div');
+        icon.className = 'software-icon';
+        icon.innerHTML = '<i class="fa fa-laptop-code"></i>';
+        softwareSelectTrigger.appendChild(icon);
+        
+        const span = document.createElement('span');
+        span.textContent = text + (version ? ' - ' + version : '');
+        softwareSelectTrigger.appendChild(span);
+        
+        // Close options
+        softwareOptions.classList.remove('open');
+      });
+    });
+
+    // Close software options when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!softwareSelectWrapper.contains(e.target)) {
+        softwareOptions.classList.remove('open');
+      }
+    });
+  }
 });
 </script>
 {% endblock %}

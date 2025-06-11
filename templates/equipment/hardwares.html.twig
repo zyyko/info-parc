@@ -1,0 +1,274 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+  {{ parent() }}
+  <style>
+    .hardware-card {
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: none;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .hardware-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .card-header-custom {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+      color: white;
+      border: none;
+      padding: 20px;
+    }
+
+    .hardware-icon {
+      width: 60px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 15px;
+      overflow: hidden;
+    }
+
+    .hardware-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .type-badge {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .page-header {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+      color: white;
+      padding: 40px 0;
+      margin-bottom: 30px;
+      border-radius: 0 0 20px 20px;
+    }
+
+    .stats-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .stats-number {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #ff6b6b;
+    }
+
+    .stats-label {
+      color: #6b7280;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-outline-primary {
+      border-color: #ff6b6b;
+      color: #ff6b6b;
+    }
+
+    .btn-outline-primary:hover {
+      background-color: #ff6b6b;
+      border-color: #ff6b6b;
+      color: white;
+    }
+
+    .btn-primary {
+      background-color: #ff6b6b;
+      border-color: #ff6b6b;
+    }
+
+    .btn-primary:hover {
+      background-color: #ee5a24;
+      border-color: #ee5a24;
+    }
+  </style>
+{% endblock %}
+
+{% block body %}
+<div class="page-header">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <h1 class="mb-2">
+          <i class="fa fa-microchip me-3"></i>
+          Gestion du Matériel
+        </h1>
+        <p class="mb-0 opacity-90">Surveillance et gestion du matériel informatique</p>
+      </div>
+      <div class="col-md-4">
+        <div class="stats-card">
+          <div class="stats-number">{{ hardwares|length }}</div>
+          <div class="stats-label">Matériels Total</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  {% if hardwares|length > 0 %}
+    <div class="row">
+      {% for hardware in hardwares %}
+        <div class="col-lg-4 col-md-6 mb-4">
+          <div class="card hardware-card h-100 shadow">
+            <div class="card-header-custom text-center">
+              <div class="hardware-icon mx-auto">
+                {% if hardware.image %}
+                  <img src="{{ asset('assets/images/hardwares_photos/' ~ hardware.image) }}" 
+                       alt="{{ hardware.title }}" 
+                       class="w-100 h-100 rounded-circle object-fit-cover">
+                {% else %}
+                  <i class="fa fa-microchip"></i>
+                {% endif %}
+              </div>
+              <h5 class="mb-2 fw-bold">{{ hardware.title }}</h5>
+              <span class="type-badge">
+                <i class="fa fa-tag me-1"></i>
+                {{ hardware.type }}
+              </span>
+            </div>
+            
+            <div class="card-body">
+              <div class="row text-center">
+                <div class="col-6">
+                  <div class="border-end">
+                    <div class="text-muted small">Type</div>
+                    <div class="fw-semibold">{{ hardware.type }}</div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="text-muted small">Identifiant</div>
+                  <div class="fw-semibold">#{{ hardware.id }}</div>
+                </div>
+              </div>
+
+              <div class="mt-3">
+                <div class="row text-center">
+                  <div class="col-12">
+                    <div class="text-muted small">Ajouté le</div>
+                    <div class="fw-semibold">{{ "now"|date('d/m/Y') }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card-footer bg-transparent border-0 pt-0">
+              <div class="d-grid">
+                <button class="btn btn-outline-danger" 
+                        onclick="confirmDelete({{ hardware.id }}, '{{ hardware.title|e('js') }}')">
+                  <i class="fa fa-trash me-1"></i>Supprimer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Add Hardware Button -->
+    <div class="row mt-4">
+      <div class="col-12 text-center">
+        <a href="{{ path('equipments_add') }}" class="btn btn-primary btn-lg shadow-sm">
+          <i class="fa fa-plus-circle me-2"></i>
+          Ajouter un Nouveau Matériel
+        </a>
+      </div>
+    </div>
+  {% else %}
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card text-center">
+          <div class="card-body py-5">
+            <i class="fa fa-microchip text-muted mb-3" style="font-size: 4rem;"></i>
+            <h4 class="text-muted mb-3">Aucun matériel trouvé</h4>
+            <p class="text-muted mb-4">Il n'y a actuellement aucun matériel enregistré dans le système.</p>
+            <a href="{{ path('equipments_add') }}" class="btn btn-primary">
+              <i class="fa fa-plus me-2"></i>Ajouter un matériel
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content shadow">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title font-weight-bold">
+          <i class="fa fa-exclamation-triangle text-warning mr-2"></i>
+          Confirmer la suppression
+        </h5>
+      </div>
+      <div class="modal-body pt-0">
+        <p class="mb-3">Voulez-vous vraiment supprimer le matériel <strong class="text-danger" id="hardwareName"></strong> ?</p>
+        <div class="alert alert-warning border-0 bg-light">
+          <i class="fa fa-info-circle mr-2"></i>
+          Cette action est définitive et ne peut pas être annulée.
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">
+          <i class="fa fa-times mr-1"></i>Annuler
+        </button>
+        <form id="deleteForm" method="POST" style="display: inline;">
+          <input type="hidden" name="_method" value="DELETE">
+          <input type="hidden" name="_token" id="csrfToken" value="">
+          <button type="submit" class="btn btn-danger">
+            <i class="fa fa-trash mr-1"></i>Supprimer
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function confirmDelete(hardwareId, hardwareName) {
+    document.getElementById('hardwareName').textContent = hardwareName;
+    document.getElementById('deleteForm').action = `/hardware/${hardwareId}/delete`;
+    
+    // Fetch CSRF token
+    fetch(`/csrf-token/${hardwareId}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('csrfToken').value = data.token;
+            $('#deleteModal').modal('show');
+        })
+        .catch(error => {
+            console.error('Error fetching CSRF token:', error);
+            alert('Error fetching security token. Please try again.');
+        });
+}
+
+function closeModal() {
+    $('#deleteModal').modal('hide');
+}
+
+// Prevent modal from closing when clicking outside or pressing ESC
+$('#deleteModal').modal({
+    backdrop: 'static',
+    keyboard: false
+});
+</script>
+{% endblock %}

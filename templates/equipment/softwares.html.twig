@@ -1,0 +1,294 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+  {{ parent() }}
+  <style>
+    .software-card {
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: none;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .software-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .card-header-custom {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 20px;
+    }
+
+    .software-icon {
+      width: 60px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 15px;
+      overflow: hidden;
+    }
+
+    .software-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .device-count-badge {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .license-progress {
+      height: 8px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+
+    .license-status {
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-expired {
+      background-color: #fee;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+
+    .status-warning {
+      background-color: #fffbeb;
+      color: #d97706;
+      border: 1px solid #fed7aa;
+    }
+
+    .status-good {
+      background-color: #f0fdf4;
+      color: #16a34a;
+      border: 1px solid #bbf7d0;
+    }
+
+    .status-no-expiry {
+      background-color: #f8fafc;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+    }
+
+    .page-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 40px 0;
+      margin-bottom: 30px;
+      border-radius: 0 0 20px 20px;
+    }
+
+    .stats-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .stats-number {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #667eea;
+    }
+
+    .stats-label {
+      color: #6b7280;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  </style>
+{% endblock %}
+
+{% block body %}
+<div class="page-header">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <h1 class="mb-2">
+          <i class="fas fa-laptop-code me-3"></i>
+          Gestion des Logiciels
+        </h1>
+        <p class="mb-0 opacity-90">Surveillance et gestion des licences logicielles</p>
+      </div>
+      <div class="col-md-4">
+        <div class="stats-card">
+          <div class="stats-number">{{ softwareData|length }}</div>
+          <div class="stats-label">Logiciels Total</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  {% if softwareData|length > 0 %}
+    <div class="row">
+      {% for data in softwareData %}
+        {% set software = data.software %}
+        {% set deviceCount = data.deviceCount %}
+        
+        {# Calculate license expiry status #}
+        {% if software.licenseExpiry %}
+          {% set now = "now"|date("U") %}
+          {% set expiry = software.licenseExpiry|date("U") %}
+          {% set daysLeft = ((expiry - now) / 86400)|round %}
+          {% set totalDays = 365 %} {# Assume 1 year license period for progress calculation #}
+          {% set progress = ((daysLeft / totalDays) * 100)|round %}
+          {% set progress = progress > 100 ? 100 : (progress < 0 ? 0 : progress) %}
+          
+          {% if daysLeft <= 0 %}
+            {% set statusClass = 'status-expired' %}
+            {% set statusText = 'Expirée' %}
+            {% set progressColor = 'bg-danger' %}
+          {% elseif daysLeft <= 30 %}
+            {% set statusClass = 'status-warning' %}
+            {% set statusText = daysLeft ~ ' jours restants' %}
+            {% set progressColor = 'bg-warning' %}
+          {% else %}
+            {% set statusClass = 'status-good' %}
+            {% set statusText = daysLeft ~ ' jours restants' %}
+            {% set progressColor = 'bg-success' %}
+          {% endif %}
+        {% else %}
+          {% set statusClass = 'status-no-expiry' %}
+          {% set statusText = 'Pas d\'expiration' %}
+          {% set progressColor = 'bg-secondary' %}
+          {% set progress = 100 %}
+        {% endif %}
+
+        <div class="col-lg-4 col-md-6 mb-4">
+          <div class="card software-card h-100 shadow">
+            <div class="card-header-custom text-center">
+              <div class="software-icon mx-auto">
+                {% if software.image %}
+                  <img src="{{ asset('assets/images/softwares_photos/' ~ software.image) }}" 
+                       alt="{{ software.name }}" 
+                       class="w-100 h-100 rounded-circle object-fit-cover">
+                {% else %}
+                  <i class="fa fa-desktop"></i>
+                {% endif %}
+              </div>
+              <h5 class="mb-2 fw-bold">{{ software.name }}</h5>
+              {% if software.version %}
+                <p class="mb-3 opacity-90">Version {{ software.version }}</p>
+              {% endif %}
+              <span class="device-count-badge">
+                <i class="fa fa-laptop me-1"></i>
+                {{ deviceCount }} appareil{{ deviceCount > 1 ? 's' : '' }}
+              </span>
+            </div>
+            
+            <div class="card-body">
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <small class="text-muted fw-semibold">Statut de la licence</small>
+                  {% if software.licenseExpiry %}
+                    <small class="text-muted">{{ progress }}%</small>
+                  {% endif %}
+                </div>
+                
+                {% if software.licenseExpiry %}
+                  <div class="progress license-progress">
+                    <div class="progress-bar {{ progressColor }}" 
+                         role="progressbar" 
+                         style="width: {{ progress }}%;" 
+                         aria-valuenow="{{ progress }}" 
+                         aria-valuemin="0" 
+                         aria-valuemax="100">
+                    </div>
+                  </div>
+                {% endif %}
+                
+                <span class="license-status {{ statusClass }}">
+                  {% if software.licenseExpiry %}
+                    {% if daysLeft <= 0 %}
+                      <i class="fa fa-times-circle me-1"></i>
+                    {% elseif daysLeft <= 30 %}
+                      <i class="fa fa-exclamation-triangle me-1"></i>
+                    {% else %}
+                      <i class="fa fa-check-circle me-1"></i>
+                    {% endif %}
+                  {% else %}
+                    <i class="fa fa-infinity me-1"></i>
+                  {% endif %}
+                  {{ statusText }}
+                </span>
+              </div>
+
+              <div class="row text-center">
+                <div class="col-6">
+                  <div class="border-end">
+                    <div class="text-muted small">Créé le</div>
+                    <div class="fw-semibold">{{ software.createdAt|date('d/m/Y') }}</div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="text-muted small">
+                    {% if software.licenseExpiry %}
+                      Expire le
+                    {% else %}
+                      Mis à jour
+                    {% endif %}
+                  </div>
+                  <div class="fw-semibold">
+                    {% if software.licenseExpiry %}
+                      {{ software.licenseExpiry|date('d/m/Y') }}
+                    {% else %}
+                      {{ software.updatedAt|date('d/m/Y') }}
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card-footer bg-transparent border-0 pt-0">
+              <div class="d-grid gap-2">
+                <a href="{{ path('software_download_report', {'id': software.id}) }}" class="btn btn-outline-primary btn-sm">
+                    <i class="fa fa-eye me-2"></i>Telecharger le rapport PDF
+                </a>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card text-center">
+          <div class="card-body py-5">
+            <i class="fas fa-laptop-code text-muted mb-3" style="font-size: 4rem;"></i>
+            <h4 class="text-muted mb-3">Aucun logiciel trouvé</h4>
+            <p class="text-muted mb-4">Il n'y a actuellement aucun logiciel enregistré dans le système.</p>
+            <button class="btn btn-primary">
+              <i class="fas fa-plus me-2"></i>Ajouter un logiciel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

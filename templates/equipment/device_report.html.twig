@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Rapport Appareil - {{ device.deviceName }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 20px;
+        }
+        .header h1 {
+            color: #007bff;
+            margin: 0;
+            font-size: 24px;
+        }
+        .header h2 {
+            color: #6c757d;
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        .device-image {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .device-image img {
+            max-width: 150px;
+            max-height: 150px;
+            border-radius: 10px;
+            border: 2px solid #dee2e6;
+        }
+        .info-section {
+            margin-bottom: 25px;
+        }
+        .info-section h3 {
+            color: #007bff;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        .info-row {
+            margin-bottom: 8px;
+        }
+        .info-label {
+            font-weight: bold;
+            display: inline-block;
+            width: 130px;
+        }
+        .health-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .health-fill {
+            height: 100%;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+            font-weight: bold;
+            font-size: 11px;
+        }
+        .health-good { background-color: #28a745; }
+        .health-warning { background-color: #ffc107; color: #212529 !important; }
+        .health-danger { background-color: #dc3545; }
+        .software-list {
+            margin-top: 10px;
+        }
+        .software-item {
+            background-color: #f8f9fa;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .software-name {
+            font-weight: bold;
+            color: #007bff;
+        }
+        .software-details {
+            font-size: 11px;
+            color: #6c757d;
+            margin-top: 3px;
+        }
+        .user-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 10px;
+            color: #6c757d;
+            border-top: 1px solid #dee2e6;
+            padding-top: 15px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status-active { background-color: #d4edda; color: #155724; }
+        .status-inactive { background-color: #f8d7da; color: #721c24; }
+        .status-repairing { background-color: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>RAPPORT D'APPAREIL</h1>
+        <h2>{{ device.deviceName }}</h2>
+        <p>Généré le {{ generatedAt|date('d/m/Y à H:i') }}</p>
+    </div>
+
+    <!-- Device Image -->
+    {% if device.deviceImage %}
+    <div class="device-image">
+        <img src="{{ absolute_url(asset('assets/images/devices_photos/' ~ device.deviceImage)) }}" alt="Image de l'appareil">
+    </div>
+    {% endif %}
+
+    <!-- Basic Information -->
+    <div class="info-section">
+        <h3>📋 Informations Générales</h3>
+        <div class="info-row">
+            <span class="info-label">Nom de l'appareil:</span>
+            {{ device.deviceName }}
+        </div>
+        <div class="info-row">
+            <span class="info-label">Numéro de série:</span>
+            {{ device.serialNumber }}
+        </div>
+        <div class="info-row">
+            <span class="info-label">Statut:</span>
+            <span class="status-badge status-{{ device.status|lower }}">{{ device.status }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Date de fabrication:</span>
+            {{ device.fabricationDate|date('d/m/Y') }}
+        </div>
+        <div class="info-row">
+            <span class="info-label">Date de renouvellement:</span>
+            {{ device.renewalDate|date('d/m/Y') }}
+        </div>
+    </div>
+
+    <!-- Device Health -->
+    <div class="info-section">
+        <h3>❤️ Santé de l'Appareil</h3>
+        <div class="health-bar">
+            {% if healthPercent >= 60 %}
+                <div class="health-fill health-good" style="width: {{ healthPercent }}%;">{{ healthPercent }}%</div>
+            {% elseif healthPercent >= 30 %}
+                <div class="health-fill health-warning" style="width: {{ healthPercent }}%;">{{ healthPercent }}%</div>
+            {% else %}
+                <div class="health-fill health-danger" style="width: {{ healthPercent }}%;">{{ healthPercent }}%</div>
+            {% endif %}
+        </div>
+        <p style="font-size: 11px; color: #6c757d; margin-top: 5px;">
+            Calculé en fonction de l'âge de l'appareil depuis sa fabrication.
+        </p>
+    </div>
+
+    <!-- Assigned User -->
+    <div class="info-section">
+        <h3>👤 Attribution</h3>
+        {% if assignedUser %}
+            <div class="user-info">
+                <div class="info-row">
+                    <span class="info-label">Utilisateur assigné:</span>
+                    {{ assignedUser.firstName }} {{ assignedUser.lastName ?? '' }}
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Statut:</span>
+                    Appareil assigné
+                </div>
+            </div>
+        {% else %}
+            <p style="color: #6c757d; font-style: italic;">Aucun utilisateur assigné à cet appareil.</p>
+        {% endif %}
+    </div>
+
+    <!-- Installed Software -->
+    <div class="info-section">
+        <h3>💻 Logiciels Installés</h3>
+        {% if deviceSoftware|length > 0 %}
+            <div class="software-list">
+                {% for deviceSoft in deviceSoftware %}
+                    <div class="software-item">
+                        <div class="software-name">{{ deviceSoft.software.name }}</div>
+                        <div class="software-details">
+                            {% if deviceSoft.software.version %}
+                                Version {{ deviceSoft.software.version }} • 
+                            {% endif %}
+                            Installé le {{ deviceSoft.installationDate|date('d/m/Y') }}
+                            {% if deviceSoft.software.licenseExpiry %}
+                                {% set now = "now"|date("U") %}
+                                {% set expiry = deviceSoft.software.licenseExpiry|date("U") %}
+                                {% set daysLeft = ((expiry - now) / 86400)|round %}
+                                <br>Licence expire le {{ deviceSoft.software.licenseExpiry|date('d/m/Y') }}
+                                {% if daysLeft <= 0 %}
+                                    <strong style="color: #dc3545;">(EXPIRÉE)</strong>
+                                {% elseif daysLeft <= 30 %}
+                                    <strong style="color: #ffc107;">({{ daysLeft }} jours restants)</strong>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            <p style="margin-top: 15px; font-size: 11px; color: #6c757d;">
+                Total: {{ deviceSoftware|length }} logiciel(s) installé(s)
+            </p>
+        {% else %}
+            <p style="color: #6c757d; font-style: italic;">Aucun logiciel installé sur cet appareil.</p>
+        {% endif %}
+    </div>
+
+    <div class="footer">
+        <p>Ce rapport a été généré automatiquement le {{ generatedAt|date('d/m/Y à H:i:s') }}</p>
+        <p>Système de Gestion des Équipements - {{ device.serialNumber }}</p>
+    </div>
+</body>
+</html>

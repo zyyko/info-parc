@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signaler un incident</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .report-container {
+            max-width: 800px;
+            margin: 50px auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .header-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 20px 20px 0 0;
+            text-align: center;
+        }
+        
+        .form-section {
+            padding: 40px;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .step.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .step.completed {
+            background: #28a745;
+            color: white;
+        }
+        
+        .step-content {
+            display: none;
+        }
+        
+        .step-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .device-card {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .device-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .device-card.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .device-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+        }
+        
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .success-message {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+        
+        .tracking-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="report-container">
+            <div class="header-section">
+                <h1><i class="fas fa-exclamation-triangle me-2"></i>Signaler un incident</h1>
+                <p class="mb-0">Signalez rapidement tout problème avec vos appareils</p>
+            </div>
+            
+            <div class="form-section">
+                <!-- Step Indicator -->
+                <div class="step-indicator">
+                    <div class="step active" id="step1">1</div>
+                    <div class="step" id="step2">2</div>
+                    <div class="step" id="step3">3</div>
+                </div>
+                
+                <!-- Step 1: Email -->
+                <div class="step-content active" id="content1">
+                    <h4 class="mb-4"><i class="fas fa-envelope me-2"></i>Étape 1: Identification</h4>
+                    <div class="row">
+                        <div class="col-md-8 mx-auto">
+                            <div class="mb-3">
+                                <label for="userEmail" class="form-label">Votre adresse email</label>
+                                <input type="email" class="form-control" id="userEmail" placeholder="exemple@email.com" required>
+                                <div class="form-text">Entrez l'email associé à vos appareils</div>
+                            </div>
+                            <div class="text-center">
+                                <button type="button" class="btn btn-primary" onclick="loadUserDevices()">
+                                    <i class="fas fa-search me-2"></i>Rechercher mes appareils
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 2: Device Selection -->
+                <div class="step-content" id="content2">
+                    <h4 class="mb-4"><i class="fas fa-laptop me-2"></i>Étape 2: Sélectionner l'appareil</h4>
+                    <div id="devicesContainer">
+                        <!-- Devices will be loaded here -->
+                    </div>
+                    <div class="text-center mt-4">
+                        <button type="button" class="btn btn-secondary me-2" onclick="previousStep()">
+                            <i class="fas fa-arrow-left me-2"></i>Précédent
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="nextStep()" disabled id="nextBtn">
+                            <i class="fas fa-arrow-right me-2"></i>Suivant
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Step 3: Description -->
+                <div class="step-content" id="content3">
+                    <h4 class="mb-4"><i class="fas fa-edit me-2"></i>Étape 3: Description du problème</h4>
+                    <form id="incidentForm">
+                        <div class="mb-4">
+                            <label for="description" class="form-label">Décrivez le problème rencontré</label>
+                            <textarea class="form-control" id="description" rows="6" placeholder="Décrivez en détail le problème que vous rencontrez avec cet appareil..." required></textarea>
+                            <div class="form-text">Soyez aussi précis que possible pour nous aider à résoudre votre problème rapidement</div>
+                        </div>
+                        
+                        <div class="text-center">
+                            <button type="button" class="btn btn-secondary me-2" onclick="previousStep()">
+                                <i class="fas fa-arrow-left me-2"></i>Précédent
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i>Signaler l'incident
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Loading -->
+                <div class="loading" id="loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                    <p class="mt-3">Traitement en cours...</p>
+                </div>
+                
+                <!-- Success Message -->
+                <div class="success-message" id="successMessage">
+                    <div class="text-success mb-3">
+                        <i class="fas fa-check-circle fa-3x"></i>
+                    </div>
+                    <h4>Incident signalé avec succès!</h4>
+                    <p>Votre incident a été enregistré. Voici votre numéro de suivi:</p>
+                    <div class="tracking-number" id="trackingNumber">
+                        TRK-000000
+                    </div>
+                    <p class="text-muted">Conservez ce numéro pour suivre l'état de votre incident</p>
+                    <button type="button" class="btn btn-primary" onclick="resetForm()">
+                        <i class="fas fa-plus me-2"></i>Signaler un autre incident
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentStep = 1;
+        let selectedDevice = null;
+        let userEmail = '';
+        let userDevices = [];
+        
+        function loadUserDevices() {
+            const email = document.getElementById('userEmail').value.trim();
+            if (!email) {
+                alert('Veuillez entrer votre adresse email');
+                return;
+            }
+            
+            userEmail = email;
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('content1').classList.remove('active');
+            
+            // AJAX call to check user and get devices
+            $.ajax({
+                url: '/api/user-devices',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ email: email }),
+                success: function(response) {
+                    userDevices = response.devices;
+                    document.getElementById('loading').style.display = 'none';
+                    displayDevices();
+                    nextStep();
+                },
+                error: function(xhr) {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('content1').classList.add('active');
+                    
+                    let errorMessage = 'Erreur lors de la récupération des appareils';
+                    if (xhr.responseJSON && xhr.responseJSON.error) {
+                        errorMessage = xhr.responseJSON.error;
+                    }
+                    
+                    alert(errorMessage + '\n\nDétails: ' + xhr.responseText);
+                }
+            });
+        }
+        
+        function displayDevices() {
+            const container = document.getElementById('devicesContainer');
+            container.innerHTML = '';
+            
+            if (userDevices.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                        <h5>Aucun appareil trouvé</h5>
+                        <p>Aucun appareil n'est associé à cette adresse email.</p>
+                        <button type="button" class="btn btn-secondary" onclick="previousStep()">
+                            <i class="fas fa-arrow-left me-2"></i>Retour
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            userDevices.forEach(device => {
+                const statusBadge = device.status === 'active' ? 
+                    '<span class="badge bg-success">Actif</span>' : 
+                    device.status === 'maintenance' ? 
+                    '<span class="badge bg-warning">Maintenance</span>' :
+                    '<span class="badge bg-secondary">Inactif</span>';
+                
+                container.innerHTML += `
+                    <div class="device-card" onclick="selectDevice(${device.id})">
+                        <div class="row align-items-center">
+                            <div class="col-auto">
+                                <img src="/assets/images/devices_photos/${device.image}" 
+                                     alt="${device.type}" 
+                                     class="device-image"
+                                     onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjRjhGOUZBIi8+CjxyZWN0IHg9IjE1IiB5PSIyMCIgd2lkdGg9IjMwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjRTlFQ0VGIi8+Cjwvc3ZnPgo='">
+                            </div>
+                            <div class="col">
+                                <h6 class="mb-1">${device.type}</h6>
+                                <small class="text-muted">N° série: ${device.serialNumber}</small><br>
+                                ${statusBadge}
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-chevron-right text-muted"></i>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        function selectDevice(deviceId) {
+            // Remove previous selection
+            document.querySelectorAll('.device-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Add selection to clicked card
+            event.currentTarget.classList.add('selected');
+            
+            selectedDevice = userDevices.find(d => d.id === deviceId);
+            document.getElementById('nextBtn').disabled = false;
+        }
+        
+        function nextStep() {
+            if (currentStep < 3) {
+                document.getElementById(`content${currentStep}`).classList.remove('active');
+                document.getElementById(`step${currentStep}`).classList.remove('active');
+                document.getElementById(`step${currentStep}`).classList.add('completed');
+                
+                currentStep++;
+                
+                document.getElementById(`content${currentStep}`).classList.add('active');
+                document.getElementById(`step${currentStep}`).classList.add('active');
+            }
+        }
+        
+        function previousStep() {
+            if (currentStep > 1) {
+                document.getElementById(`content${currentStep}`).classList.remove('active');
+                document.getElementById(`step${currentStep}`).classList.remove('active');
+                
+                currentStep--;
+                
+                document.getElementById(`content${currentStep}`).classList.add('active');
+                document.getElementById(`step${currentStep}`).classList.remove('completed');
+                document.getElementById(`step${currentStep}`).classList.add('active');
+            }
+        }
+        
+        function generateTrackingNumber() {
+            const timestamp = Date.now().toString().slice(-5);
+            const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            return `TRK-${timestamp}${random}`;
+        }
+        
+        document.getElementById('incidentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const description = document.getElementById('description').value.trim();
+            if (!description) {
+                alert('Veuillez décrire le problème');
+                return;
+            }
+            
+            // Show loading
+            document.getElementById('content3').classList.remove('active');
+            document.getElementById('loading').style.display = 'block';
+            
+            // AJAX call to create incident
+            $.ajax({
+                url: '/api/create-incident',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    userEmail: userEmail,
+                    deviceId: selectedDevice.id,
+                    description: description
+                }),
+                success: function(response) {
+                    document.getElementById('trackingNumber').textContent = response.trackingNumber;
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('successMessage').style.display = 'block';
+                },
+                error: function(xhr) {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('content3').classList.add('active');
+                    
+                    let errorMessage = 'Erreur lors de la création de l\'incident';
+                    if (xhr.responseJSON && xhr.responseJSON.error) {
+                        errorMessage = xhr.responseJSON.error;
+                    }
+                    
+                }
+            });
+        });
+        
+        function resetForm() {
+            currentStep = 1;
+            selectedDevice = null;
+            userEmail = '';
+            
+            // Reset steps
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active', 'completed');
+            });
+            document.getElementById('step1').classList.add('active');
+            
+            // Reset content
+            document.querySelectorAll('.step-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById('content1').classList.add('active');
+            
+            // Reset form
+            document.getElementById('userEmail').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('nextBtn').disabled = true;
+            
+            // Hide success message
+            document.getElementById('successMessage').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

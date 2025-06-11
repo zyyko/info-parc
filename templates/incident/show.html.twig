@@ -1,0 +1,123 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container mt-5">
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white">
+      <h3>Détails de l'incident #{{ incident.id }}</h3>
+    </div>
+
+    <div class="card-body">
+
+      <!-- USER & DEVICE INFO -->
+      <div class="row mb-4">
+        <!-- USER -->
+        <div class="col-md-6">
+          <h5>Utilisateur ayant signalé :</h5>
+          <div class="d-flex align-items-center">
+            <img src="{{ asset('/assets/images/faces/' ~ incident.reportedBy.userImage) }}"
+                 alt="Photo utilisateur"
+                 class="rounded-circle me-3"
+                 style="width: 80px; height: 80px; object-fit: cover;">
+            <div>
+              <strong>{{ incident.reportedBy.firstName }} {{ incident.reportedBy.lastName }}</strong><br>
+              <small>Email : {{ incident.reportedBy.email }}</small><br>
+              <small>Téléphone : {{ incident.reportedBy.phone ?? 'Non spécifié' }}</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- DEVICE -->
+        <div class="col-md-6">
+          <h5>Appareil concerné :</h5>
+          <div class="d-flex align-items-center">
+            <img src="{{ asset('/assets/images/devices_photos/' ~ incident.device.DeviceImage) }}"
+                 alt="Image appareil"
+                 class="rounded me-3"
+                 style="width: 80px; height: 80px; object-fit: cover;">
+            <div>
+              <strong>{{ incident.device.type }}</strong><br>
+              <small>Numéro de série : {{ incident.device.serialNumber }}</small><br>
+              <small>Marque : {{ incident.device.type }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INCIDENT DETAILS -->
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <h5>Description :</h5>
+          <p>{{ incident.description }}</p>
+        </div>
+
+        <div class="col-md-3">
+          <h5>Date de signalement :</h5>
+          <p>{{ incident.reportDate|date('d/m/Y') }}</p>
+        </div>
+
+        <div class="col-md-3">
+          <h5>ID de suivi :</h5>
+          <p>{{ incident.trackingId ?? 'N/A' }}</p>
+        </div>
+      </div>
+
+      <!-- STATUS MANAGEMENT -->
+      <form method="post" action="{{ path('incident_update', {'id': incident.id}) }}">
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <h5>Statut de l'incident :</h5>
+            <select class="form-select" name="incident_status" {{ incident.status == 'closed' ? 'disabled' }}>
+              <option value="in_progress" {{ incident.status == 'in_progress' ? 'selected' }}>En cours</option>
+              <option value="closed" {{ incident.status == 'closed' ? 'selected' }}>Fermé</option>
+            </select>
+            {% if incident.status == 'closed' %}
+              <small class="text-muted mt-1 d-block">Cet incident est fermé et ne peut plus être modifié.</small>
+            {% endif %}
+          </div>
+          
+          <div class="col-md-6">
+            <h5>Statut de l'appareil :</h5>
+            <select class="form-select" name="device_status" {{ incident.status == 'closed' ? 'disabled' }}>
+              <option value="active" {{ incident.device.status == 'active' ? 'selected' }}>Actif</option>
+              <option value="inactive" {{ incident.device.status == 'inactive' ? 'selected' }}>Inactif</option>
+              <option value="repairing" {{ incident.device.status == 'repairing' ? 'selected' }}>En maintenance</option>
+            </select>
+          </div>
+        </div>
+
+        {% if incident.status == 'in_progress' %}
+        <div class="row mb-4">
+          <div class="col-md-12">
+            <h5>Réponse/résolution :</h5>
+            <textarea class="form-control" name="resolution" rows="4" placeholder="Entrez la réponse ou la solution à l'incident..."></textarea>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-12">
+            <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+          </div>
+        </div>
+        {% endif %}
+      </form>
+
+      {% if incident.status == 'closed' and incident.resolution is not empty %}
+      <div class="row mt-4">
+        <div class="col-md-12">
+          <h5>Résolution :</h5>
+          <div class="alert alert-success">
+            {{ incident.resolution }}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <a href="{{ path('incident_list') }}" class="btn btn-secondary">← Retour à la liste</a>
+  </div>
+</div>
+{% endblock %}

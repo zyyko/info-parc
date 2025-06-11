@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Rapport Logiciel - {{ software.name }}</title>
+    <style>
+        body {
+            font-family: DejaVu Sans, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+        }
+        .section {
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        .section-title {
+            color: #667eea;
+            font-size: 18px;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #667eea;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .label {
+            font-weight: bold;
+            color: #555;
+        }
+        .value {
+            color: #333;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-expired { background: #fee2e2; color: #dc2626; }
+        .status-warning { background: #fff7ed; color: #ea580c; }
+        .status-good { background: #f0fdf4; color: #16a34a; }
+        .devices-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .devices-table th,
+        .devices-table td {
+            border: 1px solid #e2e8f0;
+            padding: 8px;
+            text-align: left;
+        }
+        .devices-table th {
+            background: #f1f5f9;
+            font-weight: bold;
+        }
+        .devices-table tr:nth-child(even) {
+            background: #f8fafc;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ software.name }}</h1>
+        {% if software.version %}
+            <p>Version {{ software.version }}</p>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <h2 class="section-title">Informations Générales</h2>
+        <div class="info-grid">
+            <span class="label">Nom du logiciel:</span>
+            <span class="value">{{ software.name }}</span>
+
+            {% if software.version %}
+                <span class="label">Version:</span>
+                <span class="value">{{ software.version }}</span>
+            {% endif %}
+
+            <span class="label">Date de création:</span>
+            <span class="value">{{ software.createdAt|date('d/m/Y') }}</span>
+
+            <span class="label">Dernière mise à jour:</span>
+            <span class="value">{{ software.updatedAt|date('d/m/Y') }}</span>
+
+            <span class="label">Nombre d'installations:</span>
+            <span class="value">{{ deviceCount }} appareil(s)</span>
+        </div>
+    </div>
+
+    {% if software.licenseExpiry %}
+    <div class="section">
+        <h2 class="section-title">Statut de la Licence</h2>
+        <div class="info-grid">
+            <span class="label">Date d'expiration:</span>
+            <span class="value">{{ software.licenseExpiry|date('d/m/Y') }}</span>
+
+            <span class="label">Statut:</span>
+            <span class="value">
+                {% if licenseStatus.isExpired %}
+                    <span class="status-badge status-expired">Expirée</span>
+                {% elseif licenseStatus.daysLeft <= 30 %}
+                    <span class="status-badge status-warning">{{ licenseStatus.daysLeft }} jours restants</span>
+                {% else %}
+                    <span class="status-badge status-good">{{ licenseStatus.daysLeft }} jours restants</span>
+                {% endif %}
+            </span>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if deviceSoftware|length > 0 %}
+    <div class="section">
+        <h2 class="section-title">Appareils Installés</h2>
+        <table class="devices-table">
+            <thead>
+                <tr>
+                    <th>Nom de l'appareil</th>
+                    <th>Numéro de série</th>
+                    <th>Date d'installation</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for installation in deviceSoftware %}
+                <tr>
+                    <td>{{ installation.device.deviceName }}</td>
+                    <td>{{ installation.device.serialNumber }}</td>
+                    <td>{{ installation.installationDate|date('d/m/Y') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <p>Rapport généré le {{ generatedAt|date('d/m/Y à H:i') }}</p>
+    </div>
+</body>
+</html>

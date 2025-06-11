@@ -29,6 +29,9 @@ class Software
     #[ORM\Column]
     private ?\DateTime $updated_at = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $image = null;
+
     // Getters and setters
     public function getId(): ?int
     {
@@ -99,6 +102,17 @@ class Software
     {
         $this->updated_at = $updated_at;
 
+        return $this;
+    }
+
+    public function getImage(): ?string
+    {
+        return $this->image;
+    }
+
+    public function setImage(?string $image): static
+    {
+        $this->image = $image;
         return $this;
     }
 }

@@ -35,13 +35,17 @@ class Incident
     private ?\DateTime $report_date = null;
 
     #[ORM\Column(length: 100, nullable: true)]
-    private ?string $tracking_id = null;
+    private ?string $trackingId = null;
 
     #[ORM\Column]
     private ?\DateTime $created_at = null;
 
     #[ORM\Column]
     private ?\DateTime $updated_at = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $resolution = null;
+
 
     // Getters and setters
     public function getId(): ?int
@@ -73,10 +77,10 @@ class Incident
         return $this->reported_by;
     }
 
-    public function setReportedBy(?string $reported_by): static
+
+    public function setReportedBy(?User $reported_by): static
     {
         $this->reported_by = $reported_by;
-
         return $this;
     }
 
@@ -142,13 +146,24 @@ class Incident
 
     public function getTrackingId(): ?string
     {
-        return $this->tracking_id;
+        return $this->trackingId;
     }
 
-    public function setTrackingId(?string $tracking_id): static
+    public function setTrackingId(?string $trackingId): static
     {
-        $this->tracking_id = $tracking_id;
+        $this->trackingId = $trackingId;
 
+        return $this;
+    }
+
+    public function getResolution(): ?string
+    {
+        return $this->resolution;
+    }
+
+    public function setResolution(?string $resolution): static
+    {
+        $this->resolution = $resolution;
         return $this;
     }
 }

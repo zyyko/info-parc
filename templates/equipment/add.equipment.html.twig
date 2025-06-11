@@ -1,0 +1,516 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+  {{ parent() }}
+  <style>
+    .form-container {
+      background: #FFFFFF;
+      min-height: 100vh;
+      padding: 40px 0;
+    }
+
+    .form-card {
+      background: #FFFFFF;
+      border-radius: 20px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e9ecef;
+      overflow: hidden;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .form-header {
+      background: #FFFFFF;
+      color: #2d3748;
+      padding: 30px;
+      text-align: center;
+      border-bottom: 1px solid #e9ecef;
+      position: relative;
+    }
+
+    .form-header h1 {
+      color: #2d3748;
+      font-weight: 600;
+    }
+
+    .form-header p {
+      color: #718096;
+    }
+
+    .form-body {
+      padding: 40px;
+    }
+
+    .equipment-type-selector {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 40px;
+      justify-content: center;
+    }
+
+    .type-option {
+      flex: 1;
+      max-width: 200px;
+      border: 2px solid #e2e8f0;
+      border-radius: 15px;
+      padding: 25px 15px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .type-option:hover {
+      border-color: #4299e1;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(66, 153, 225, 0.15);
+    }
+
+    .type-option.active {
+      border-color: #4299e1;
+      background: #FFFFFF;
+      transform: translateY(-3px);
+      box-shadow: 0 12px 35px rgba(66, 153, 225, 0.2);
+    }
+
+    .type-option.active .type-icon {
+      color: #4299e1;
+    }
+
+    .type-option.active .type-title {
+      color: #2d3748;
+    }
+
+    .type-option.active .type-description {
+      color: #4299e1;
+    }
+
+    .type-icon {
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+      display: block;
+      color: #718096;
+      transition: color 0.3s ease;
+    }
+
+    .type-title {
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-bottom: 5px;
+      color: #2d3748;
+    }
+
+    .type-description {
+      font-size: 0.9rem;
+      color: #718096;
+    }
+
+    .form-section {
+      display: none;
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    .form-section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-group {
+      margin-bottom: 25px;
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 8px;
+      display: block;
+      font-size: 0.95rem;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 15px 20px;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      background: #f9fafb;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #4299e1;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+    }
+
+    .form-control::placeholder {
+      color: #a0aec0;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 20px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    .file-upload-wrapper {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+    }
+
+    .file-upload {
+      position: relative;
+      overflow: hidden;
+      border: 2px dashed #d1d5db;
+      border-radius: 10px;
+      padding: 40px 20px;
+      text-align: center;
+      background: #f9fafb;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .file-upload:hover {
+      border-color: #667eea;
+      background: #f0f4ff;
+    }
+
+    .file-upload input[type="file"] {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .file-upload-icon {
+      font-size: 2rem;
+      color: #9ca3af;
+      margin-bottom: 10px;
+    }
+
+    .file-upload:hover .file-upload-icon {
+      color: #667eea;
+    }
+
+    .submit-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+      margin-top: 20px;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .form-help {
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-top: 5px;
+    }
+
+    .required {
+      color: #ef4444;
+    }
+
+    select.form-control {
+      cursor: pointer;
+    }
+
+    .preview-image {
+      max-width: 100px;
+      max-height: 100px;
+      border-radius: 10px;
+      margin-top: 10px;
+      border: 2px solid #e5e7eb;
+    }
+  </style>
+{% endblock %}
+
+{% block body %}
+<div class="form-container">
+  <div class="container">
+    <div class="form-card">
+      <div class="form-header">
+        <h1><i class="fa fa-plus-circle me-3"></i>Ajouter un Équipement</h1>
+        <p class="mb-0 opacity-90">Sélectionnez le type d'équipement et remplissez les informations</p>
+      </div>
+      
+      <div class="form-body">
+        <form id="equipmentForm" method="post" enctype="multipart/form-data" action="{{ path('equipments_store') }}">
+          <!-- Equipment Type Selector -->
+          <div class="equipment-type-selector">
+            <div class="type-option" data-type="device">
+              <i class="fa fa-laptop type-icon"></i>
+              <div class="type-title">Appareil</div>
+              <div class="type-description">Ordinateurs, tablettes, smartphones</div>
+            </div>
+            <div class="type-option" data-type="software">
+              <i class="fa fa-desktop type-icon"></i>
+              <div class="type-title">Logiciel</div>
+              <div class="type-description">Applications, systèmes, licences</div>
+            </div>
+            <div class="type-option" data-type="hardware">
+              <i class="fa fa-microchip type-icon"></i>
+              <div class="type-title">Matériel</div>
+              <div class="type-description">Composants, périphériques</div>
+            </div>
+          </div>
+
+          <!-- Hidden input for equipment type -->
+          <input type="hidden" name="equipment_type" id="equipment_type">
+
+          <!-- Device Form -->
+          <div id="device-form" class="form-section">
+            <h3 class="mb-4"><i class="fa fa-laptop me-2"></i>Informations de l'Appareil</h3>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Nom de l'appareil <span class="required">*</span></label>
+                <input type="text" name="device_name" class="form-control" placeholder="Ex: MacBook Pro 2023">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Type <span class="required">*</span></label>
+                <select name="device_type" class="form-control">
+                  <option value="">Sélectionner un type</option>
+                  <option value="laptop">Ordinateur portable</option>
+                  <option value="desktop">Ordinateur de bureau</option>
+                  <option value="tablet">Tablette</option>
+                  <option value="smartphone">Smartphone</option>
+                  <option value="printer">Imprimante</option>
+                  <option value="other">Autre</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Numéro de série <span class="required">*</span></label>
+                <input type="text" name="serial_number" class="form-control" placeholder="Ex: ABC123XYZ789">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Statut</label>
+                <select name="status" class="form-control">
+                  <option value="active">Actif</option>
+                  <option value="inactive">Inactif</option>
+                  <option value="repairing">En maintenance</option>
+{#                   <option value="retired">Retiré</option>
+ #}                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Date de fabrication</label>
+                <input type="date" name="fabrication_date" class="form-control">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Date de renouvellement</label>
+                <input type="date" name="renewal_date" class="form-control">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Image de l'appareil</label>
+              <div class="file-upload">
+                <input type="file" name="device_image" accept="image/*" onchange="previewImage(this, 'device-preview')">
+                <i class="fa fa-cloud-upload-alt file-upload-icon"></i>
+                <div>Cliquez pour télécharger une image</div>
+                <div class="form-help">JPG, PNG - Max 5MB</div>
+              </div>
+              <img id="device-preview" class="preview-image" style="display: none;">
+            </div>
+          </div>
+
+          <!-- Software Form -->
+          <div id="software-form" class="form-section">
+            <h3 class="mb-4"><i class="fa fa-desktop me-2"></i>Informations du Logiciel</h3>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Nom du logiciel <span class="required">*</span></label>
+                <input type="text" name="software_name" class="form-control" placeholder="Ex: Microsoft Office 365">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Version</label>
+                <input type="text" name="version" class="form-control" placeholder="Ex: 2023.1.0">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Date d'expiration de la licence</label>
+              <input type="date" name="license_expiry" class="form-control">
+              <div class="form-help">Laissez vide si la licence n'expire pas</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Image du logiciel</label>
+              <div class="file-upload">
+                <input type="file" name="software_image" accept="image/*" onchange="previewImage(this, 'software-preview')">
+                <i class="fa fa-cloud-upload-alt file-upload-icon"></i>
+                <div>Cliquez pour télécharger une image</div>
+                <div class="form-help">JPG, PNG - Max 5MB</div>
+              </div>
+              <img id="software-preview" class="preview-image" style="display: none;">
+            </div>
+          </div>
+
+          <!-- Hardware Form -->
+          <div id="hardware-form" class="form-section">
+            <h3 class="mb-4"><i class="fa fa-microchip me-2"></i>Informations du Matériel</h3>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Titre <span class="required">*</span></label>
+                <input type="text" name="hardware_title" class="form-control" placeholder="Ex: Processeur Intel i7">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Type <span class="required">*</span></label>
+                <select name="hardware_type" class="form-control">
+                  <option value="">Sélectionner un type</option>
+                  <option value="processor">Processeur</option>
+                  <option value="memory">Mémoire RAM</option>
+                  <option value="storage">Stockage</option>
+                  <option value="graphics">Carte graphique</option>
+                  <option value="motherboard">Carte mère</option>
+                  <option value="power_supply">Alimentation</option>
+                  <option value="cooling">Refroidissement</option>
+                  <option value="other">Autre</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Image du matériel</label>
+              <div class="file-upload">
+                <input type="file" name="hardware_image" accept="image/*" onchange="previewImage(this, 'hardware-preview')">
+                <i class="fa fa-cloud-upload-alt file-upload-icon"></i>
+                <div>Cliquez pour télécharger une image</div>
+                <div class="form-help">JPG, PNG - Max 5MB</div>
+              </div>
+              <img id="hardware-preview" class="preview-image" style="display: none;">
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="submit-btn" id="submitBtn" disabled>
+            <i class="fa fa-save me-2"></i>Enregistrer l'équipement
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const typeOptions = document.querySelectorAll('.type-option');
+  const formSections = document.querySelectorAll('.form-section');
+  const equipmentTypeInput = document.getElementById('equipment_type');
+  const submitBtn = document.getElementById('submitBtn');
+
+  // Handle equipment type selection
+  typeOptions.forEach(option => {
+    option.addEventListener('click', function() {
+      const selectedType = this.dataset.type;
+      
+      // Remove active class from all options
+      typeOptions.forEach(opt => opt.classList.remove('active'));
+      
+      // Add active class to selected option
+      this.classList.add('active');
+      
+      // Hide all form sections
+      formSections.forEach(section => section.classList.remove('active'));
+      
+      // Show selected form section
+      const targetForm = document.getElementById(selectedType + '-form');
+      if (targetForm) {
+        targetForm.classList.add('active');
+      }
+      
+      // Update hidden input
+      equipmentTypeInput.value = selectedType;
+      
+      // Enable submit button
+      submitBtn.disabled = false;
+    });
+  });
+
+  // Form validation
+  const form = document.getElementById('equipmentForm');
+  form.addEventListener('submit', function(e) {
+    const selectedType = equipmentTypeInput.value;
+    
+    if (!selectedType) {
+      e.preventDefault();
+      alert('Veuillez sélectionner un type d\'équipement');
+      return;
+    }
+    
+    // Validate required fields based on selected type
+    let isValid = true;
+    const activeSection = document.querySelector('.form-section.active');
+    const requiredFields = activeSection.querySelectorAll('input[required], select[required], input[name$="_name"], input[name$="_title"]');
+    
+    requiredFields.forEach(field => {
+      if (!field.value.trim()) {
+        field.style.borderColor = '#ef4444';
+        isValid = false;
+      } else {
+        field.style.borderColor = '#e5e7eb';
+      }
+    });
+    
+    if (!isValid) {
+      e.preventDefault();
+      alert('Veuillez remplir tous les champs obligatoires');
+    }
+  });
+});
+
+// Image preview function
+function previewImage(input, previewId) {
+  const preview = document.getElementById(previewId);
+  const file = input.files[0];
+  
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  } else {
+    preview.style.display = 'none';
+  }
+}
+</script>
+{% endblock %}

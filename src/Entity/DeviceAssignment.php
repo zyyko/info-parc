@@ -34,6 +34,9 @@ class DeviceAssignment
     #[ORM\Column]
     private ?\DateTime $updated_at = null;
 
+
+
+
     // Getters and setters
     public function getId(): ?int
     {

@@ -48,6 +48,14 @@ class Device
         $this->updated_at = new \DateTime();
     }
 
+    #[ORM\OneToOne(mappedBy: 'device', targetEntity: DeviceAssignment::class)]
+    private ?DeviceAssignment $assignment = null;
+
+    public function getAssignment(): ?DeviceAssignment
+    {
+        return $this->assignment;
+    }
+
 
     public function getId(): ?int
     {
